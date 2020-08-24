@@ -139,7 +139,7 @@ use constant (
 
     },    # /Constants for Version 2.2
 
-    V_2_03 => { 
+    V_2_03 => {
 
       MAX_DATA_BYTES           =>  32, # max number of data bytes in non-Sysex messages
 
@@ -264,6 +264,7 @@ use constant (
       RESERVED_COMMAND         => 0x00, # 2nd SysEx data byte is a chip-specific command (AVR, PIC, TI, etc).
       SERIAL_DATA              => 0x60, # serial port config/write/read/close/flush/listen request and read reply
       ENCODER_DATA             => 0x61, # receive rotary-encoders current positions
+      PULSECOUNTER_DATA        => 0x63, # receive rotary-encoders current positions
       ANALOG_MAPPING_QUERY     => 0x69, # ask for mapping of analog to pin numbers
       ANALOG_MAPPING_RESPONSE  => 0x6A, # reply with mapping info
       CAPABILITY_QUERY         => 0x6B, # ask for supported modes and resolution of all pins
@@ -356,7 +357,7 @@ use constant (
       ONEWIRE                  => 0x07, # pin configured for 1-Wire commuication
       STEPPER                  => 0x08, # pin configured for stepper motor
       ENCODER                  => 0x09, # pin configured for rotary-encoders
-      SERIAL                   => 0x0A, # pin configured for serial port      
+      SERIAL                   => 0x0A, # pin configured for serial port
       PULLUP                   => 0x0B, # digital pin in digitalInput mode with pullup
 
       # Deprecated entries
@@ -364,7 +365,7 @@ use constant (
         qw( FIRMATA_STRING SYSEX_I2C_REQUEST SYSEX_I2C_REPLY SYSEX_SAMPLING_INTERVAL )
       ],
 
-    },    # /Constants for Version 2.6    
+    },    # /Constants for Version 2.6
   }
 );
 
@@ -393,4 +394,4 @@ use constant { COMMAND_NAMES => [ $COMMAND_NAMES = [ keys %$COMMAND_NAMES ] ] };
 
 %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
-1;     
+1;
