@@ -255,6 +255,7 @@ sub sysex_handle {
       my @onewirepins;
       my @stepperpins;
       my @encoderpins;
+      my @pulsecntpins;
       my @serialpins;
       my @pulluppins;
 
@@ -295,6 +296,9 @@ sub sysex_handle {
           	push @encoderpins, $pin;
             $self->{metadata}{encoder_resolutions}{$pin} = $capabilities->{$pin}->{PIN_ENCODER+0}->{resolution};
           }
+          if ($capabilities->{$pin}->{PIN_PULSECNT+0}) {
+          	push @pulsecntpins, $pin;
+          }
           if ($capabilities->{$pin}->{PIN_SERIAL+0}) {
             push @serialpins, $pin;
             $self->{metadata}{serial_resolutions}{$pin} = $capabilities->{$pin}->{PIN_SERIAL+0}->{resolution};
@@ -314,6 +318,7 @@ sub sysex_handle {
       $self->{metadata}{onewire_pins} = \@onewirepins;
       $self->{metadata}{stepper_pins} = \@stepperpins;
       $self->{metadata}{encoder_pins} = \@encoderpins;
+      $self->{metadata}{pulsecnt_pins} = \@pulsecntpins;
       $self->{metadata}{serial_pins}  = \@serialpins;
       $self->{metadata}{pullup_pins}  = \@pulluppins;
       last;

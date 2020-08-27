@@ -121,6 +121,7 @@ our $MODENAMES = {
   9                           => 'ENCODER',
  10                           => 'SERIAL',
  11                           => 'PULLUP',
+ 12                           => 'PULSECNT',
 };
 
 =head1 DESCRIPTION

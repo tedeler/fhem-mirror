@@ -31,6 +31,7 @@ use constant (
     PIN_ENCODER => 9,
     PIN_SERIAL  => 10,
     PIN_PULLUP  => 11,
+    PIN_PULSECNT=> 12,
     PIN_LOW  => 0,
     PIN_HIGH => 1,
   }
@@ -359,6 +360,7 @@ use constant (
       ENCODER                  => 0x09, # pin configured for rotary-encoders
       SERIAL                   => 0x0A, # pin configured for serial port
       PULLUP                   => 0x0B, # digital pin in digitalInput mode with pullup
+      PULSECNT                 => 0x0C, # digital pin in pulsecounter mode
 
       # Deprecated entries
       deprecated => [

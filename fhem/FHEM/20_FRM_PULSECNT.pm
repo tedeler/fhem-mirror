@@ -5,6 +5,7 @@ package main;
 
 use strict;
 use warnings;
+use Data::Dumper;
 
 #add FHEM/lib to @INC if it's not allready included. Should rather be in fhem.pl than here though...
 BEGIN {
@@ -60,7 +61,8 @@ FRM_PULSECNT_Init($$)
  	my $pulseCntNum = @$args[1];
  	my $name = $hash->{NAME};
 
-
+	print STDERR "FRM_PULSECNT_Init";
+	print STDERR Dumper($hash);
 	Log3 $hash->{NAME}, 1, "[$name] pin=$pin und counter=$pulseCntNum";
 
 
