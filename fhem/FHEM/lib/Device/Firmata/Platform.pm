@@ -983,6 +983,19 @@ sub observe_stepper {
   return 1;
 }
 
+sub oberve_pulsecnt {
+  my ( $self, $pulseCntNum, $observer, $context ) = @_;
+  my $pin = $context->{PIN};
+
+  die "unsupported mode 'PULSECNT' for pin '".$pin."'" unless ($self->is_supported_mode($pin,PIN_PULSECNT));
+
+  $self->{pulsecnt_observer}[$pulseCntNum] = {
+      method  => $observer,
+      context => $context,
+    };
+  return 1;
+}
+
 sub observe_encoder {
   my ( $self, $encoderNum, $observer, $context ) = @_;
 #TODO validation?  die "unsupported mode 'ENCODER' for pin '".$pin."'" unless ($self->is_supported_mode($pin,PIN_ENCODER));

@@ -74,6 +74,7 @@ FRM_PULSECNT_Init($$)
 		FRM_Client_AssignIOPort($hash);
 		my $firmata = FRM_Client_FirmataDevice($hash);
 		$firmata->pulsecounter_attach($pulseCntNum, $pin);
+		$firmata->oberve_pulsecnt($pulseCntNum, \&FRM_PULSECNT_observer, $hash);
 #		$firmata->observe_pulsecounter(\&FRM_PULSECNT_observer, $hash );
 		Log3 $name, 1, "after";
 	};
@@ -98,6 +99,7 @@ FRM_PULSECNT_observer
 {
 	my ( $encoder, $value, $hash ) = @_;
 	my $name = $hash->{NAME};
+	print STDERR "FRM_PULSECNT_observer";
 	Log3 ($name,5,"onEncoderMessage for pins ".$hash->{PINA}.",".$hash->{PINB}." encoder: ".$encoder." position: ".$value."\n");
 	main::readingsBeginUpdate($hash);
 	main::readingsBulkUpdate($hash,"position",$value+$hash->{offset}, 1);
