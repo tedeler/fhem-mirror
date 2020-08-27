@@ -45,6 +45,7 @@ use Device::Firmata::Base
   onewire_observer            => [],
   stepper_observer            => [],
   encoder_observer            => [],
+  pulsecnt_observer            => [],
   serial_observer             => [],
   scheduler_observer          => undef,
   string_observer             => undef,
@@ -95,6 +96,7 @@ sub detach {
   $self->{onewire_observer}   = [];
   $self->{stepper_observer}   = [];
   $self->{encoder_observer}   = [];
+  $self->{pulsecnt_observer}  = [];
   $self->{serial_observer}    = [];
   $self->{scheduler_observer} = undef;
   $self->{tasks}              = [];
@@ -399,6 +401,20 @@ sub sysex_handle {
       my $observer = $self->{serial_observer}[$serialPort];
       if (defined $observer) {
         $observer->{method}( $data, $observer->{context} );
+      }
+      last;
+    };
+
+    $sysex_message->{command_str} eq 'PULSECOUNTER_DATA' and do {
+      my $id = $data->{pulseCntNum};
+      my $cnt_shortPause = $data->{cnt_shortPause};
+      my $cnt_shortPulse = $data->{cnt_shortPulse};
+      my $cnt_longPulse = $data->{cnt_longPulse};
+      my $cnt_pulse = $data->{cnt_pulse};
+
+      my $observer = $self->{pulsecnt_observer}[$id];
+      if (defined $observer) {
+        $observer->{method}( $id, $cnt_shortPause, $cnt_shortPulse, $cnt_longPulse, $cnt_pulse, $observer->{context} );
       }
       last;
     };

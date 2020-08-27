@@ -97,14 +97,15 @@ FRM_PULSECNT_Init($$)
 sub
 FRM_PULSECNT_observer
 {
-	my ( $encoder, $value, $hash ) = @_;
+	my ($id, $cnt_shortPause, $cnt_shortPulse, $cnt_longPulse, $cnt_pulse, $hash) = @_;
 	my $name = $hash->{NAME};
-	print STDERR "FRM_PULSECNT_observer";
-	Log3 ($name,5,"onEncoderMessage for pins ".$hash->{PINA}.",".$hash->{PINB}." encoder: ".$encoder." position: ".$value."\n");
 	main::readingsBeginUpdate($hash);
-	main::readingsBulkUpdate($hash,"position",$value+$hash->{offset}, 1);
-	main::readingsBulkUpdate($hash,"value",$value, 1);
+	main::readingsBulkUpdate($hash,"cnt_shortPause",$cnt_shortPause, 1);
+	main::readingsBulkUpdate($hash,"cnt_shortPulse",$cnt_shortPulse, 1);
+	main::readingsBulkUpdate($hash,"cnt_longPulse",$cnt_longPulse, 1);
+	main::readingsBulkUpdate($hash,"cnt_pulse",$cnt_pulse, 1);
 	main::readingsEndUpdate($hash,1);
+	print STDERR "FRM_PULSECNT_observer $cnt_pulse";
 }
 
 sub

@@ -340,6 +340,11 @@ sub sysex_parse {
           last;
         };
 
+        $command == $protocol_commands->{PULSECOUNTER_DATA} and do {
+          $return_data = $self->handle_pulsecnt_response($sysex_data);
+          last;
+        };
+
         $command == $protocol_commands->{SERIAL_DATA} and do {
           $return_data = $self->handle_serial_reply($sysex_data);
           last;
@@ -1022,6 +1027,24 @@ sub packet_encoder_detach {
   my ( $self,$encoderNum ) = @_;
   my $packet = $self->packet_sysex_command('ENCODER_DATA', $ENCODER_COMMANDS->{ENCODER_DETACH}, $encoderNum);
   return $packet;
+}
+
+sub handle_pulsecnt_response {
+  	my ( $self, $sysex_data ) = @_;
+    my $id = shift @$sysex_data;
+    my $cnt_shortPause = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+    my $cnt_shortPulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+    my $cnt_longPulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+    my $cnt_pulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+
+    return {
+      pulseCntNum => $id,
+      cnt_shortPause => $cnt_shortPause,
+      cnt_shortPulse => $cnt_shortPulse,
+      cnt_longPulse => $cnt_longPulse,
+      cnt_pulse => $cnt_pulse
+    };
+
 }
 
 sub handle_encoder_response {
