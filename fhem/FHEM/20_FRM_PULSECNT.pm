@@ -104,11 +104,22 @@ FRM_PULSECNT_observer
 {
 	my ($id, $cnt_shortPause, $cnt_shortPulse, $cnt_longPulse, $cnt_pulse, $hash) = @_;
 	my $name = $hash->{NAME};
+	my $old_cnt_pulse = ReadingsVal($name, "cnt_pulse", 0);
+	my $cnt_diff = $cnt_pulse - $old_cnt_pulse;
+	if ($cnt_diff < 0) {
+		$cnt_diff = 0;
+	}
+	my $persistent_cnt_pulse = ReadingsVal($name, "persistent_cnt_pulse", 0);
+
+
 	main::readingsBeginUpdate($hash);
 	main::readingsBulkUpdate($hash,"cnt_shortPause",$cnt_shortPause, 1);
 	main::readingsBulkUpdate($hash,"cnt_shortPulse",$cnt_shortPulse, 1);
 	main::readingsBulkUpdate($hash,"cnt_longPulse",$cnt_longPulse, 1);
 	main::readingsBulkUpdate($hash,"cnt_pulse",$cnt_pulse, 1);
+	main::readingsBulkUpdate($hash,"persistent_cnt_pulse",$persistent_cnt_pulse + $cnt_diff, 1);
+
+
 	main::readingsEndUpdate($hash,1);
 	print STDERR "FRM_PULSECNT_observer $cnt_pulse";
 }
