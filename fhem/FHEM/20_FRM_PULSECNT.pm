@@ -55,25 +55,30 @@ FRM_PULSECNT_Init($$)
 {
 	my ($hash,$args) = @_;
 
-	my $u = "wrong syntax: define <name> FRM_PULSECNT pin id";
-  	return $u unless defined $args and int(@$args) == 2;
+	my $u = "wrong syntax: define <name> FRM_PULSECNT pin id minPauseBefore_us minPulseLength_us maxPulseLength_us";
+  	return $u unless defined $args and int(@$args) == 5;
  	my $pin = @$args[0];
  	my $pulseCntNum = @$args[1];
+	my $minPauseBefore_us = @$args[2];
+	my $minPulseLength_us = @$args[3];
+	my $maxPulseLength_us =@$args[4];
  	my $name = $hash->{NAME};
 
-	print STDERR "FRM_PULSECNT_Init";
-	print STDERR Dumper($hash);
-	Log3 $hash->{NAME}, 1, "[$name] pin=$pin und counter=$pulseCntNum";
+#	print STDERR "FRM_PULSECNT_Init";
+#	print STDERR Dumper($hash);
+	Log3 $hash->{NAME}, 1, "[$name] pin=$pin id=$pulseCntNum minPauseBefore_us=$minPauseBefore_us minPulseLength_us=$minPulseLength_us maxPulseLength_us=$maxPulseLength_us";
 
 
 	$hash->{PIN} = $pin;
 	$hash->{CNTNUM} = $pulseCntNum;
+	$hash->{minPauseBefore_us} = $minPauseBefore_us;
+	$hash->{minPulseLength_us} = $minPulseLength_us;
+	$hash->{maxPulseLength_us} = $maxPulseLength_us;
 
 	eval {
-		Log3 $name, 1, "before";
 		FRM_Client_AssignIOPort($hash);
 		my $firmata = FRM_Client_FirmataDevice($hash);
-		$firmata->pulsecounter_attach($pulseCntNum, $pin);
+		$firmata->pulsecounter_attach($pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us);
 		$firmata->oberve_pulsecnt($pulseCntNum, \&FRM_PULSECNT_observer, $hash);
 #		$firmata->observe_pulsecounter(\&FRM_PULSECNT_observer, $hash );
 		Log3 $name, 1, "after";
@@ -237,36 +242,28 @@ FRM_PULSECNT_State($$$$)
 <a name="FRM_PULSECNT"></a>
 <h3>FRM_PULSECNT</h3>
 <ul>
-  represents a rotary-encoder attached to two pins of an <a href="http://www.arduino.cc">Arduino</a> running <a href="http://www.firmata.org">Firmata</a><br>
+	represents a pulse counter to count digital pulses e.g. S0-Zähler running <a href="http://www.firmata.org">Firmata</a><br>
   Requires a defined <a href="#FRM">FRM</a>-device to work.<br><br>
 
   <a name="FRM_PULSECNTdefine"></a>
   <b>Define</b>
   <ul>
-  <code>define &lt;name&gt; FRM_PULSECNT &lt;pinA&gt; &lt;pinB&gt; [id]</code> <br>
-  Defines the FRM_PULSECNT device. &lt;pinA&gt> and &lt;pinA&gt> are the arduino-pins to use.<br>
-  [id] is the instance-id of the encoder. Must be a unique number per FRM-device (rages from 0-4 depending on Firmata being used, optional if a single encoder is attached to the arduino).<br>
+  <code>define &lt;name&gt; FRM_PULSECNT &lt;pin&gt; &lt;id&gt; &lt;minPauseBefore_us&gt; &lt;minPulseLength_us&gt; &lt;maxPulseLength_us&gt;</code> <br>
+  Defines the FRM_PULSECNT device. &lt;pin&gt; is the device pin to use.<br>
+  [id] is the instance-id of the counter. Must be a unique number per FRM-device (rages from 0-1 depending on Firmata being used.<br>
+
+	The three time values &lt;minPauseBefore_us&gt; &lt;minPulseLength_us&gt; &lt;maxPulseLength_us&gt; define a valid pulse.
+	Valid pulses are counted in reading &lt;cnt_pulse&gt;. Too long pulses are stored in &lt;cnt_longPulse&gt;. Too short pulses are stored
+	in &lt;cnt_shortPulse&gt;. If the pause between pulses is too short the pulse is not counted. The reading &lt;cnt_shortPause&gt; counts
+	this events.
   </ul>
 
   <br>
   <a name="FRM_PULSECNTset"></a>
   <b>Set</b><br>
-    <li>reset<br>
-    resets to value of 'position' to 0<br></li>
-    <li>offset &lt;value&gt;<br>
-    set offset value of 'position'<br></li>
   <a name="FRM_PULSECNTget"></a>
   <b>Get</b>
   <ul>
-    <li>position<br>
-    returns the position of the rotary-encoder attached to pinA and pinB of the arduino<br>
-    the 'position' is the sum of 'value' and 'offset'<br></li>
-    <li>offset<br>
-    returns the offset value<br>
-    on shutdown of fhem the latest position-value is saved as new offset.<br></li>
-    <li>value<br>
-    returns the raw position value as it's reported by the rotary-encoder attached to pinA and pinB of the arduino<br>
-    this value is reset to 0 whenever Arduino restarts or Firmata is reinitialized<br></li>
   </ul><br>
   <a name="FRM_PULSECNTattr"></a>
   <b>Attributes</b><br>
@@ -275,8 +272,6 @@ FRM_PULSECNT_State($$$$)
       Specify which <a href="#FRM">FRM</a> to use. (Optional, only required if there is more
       than one FRM-device defined.)
       </li>
-      <li><a href="#eventMap">eventMap</a><br></li>
-      <li><a href="#readingFnAttributes">readingFnAttributes</a><br></li>
     </ul>
   </ul>
 <br>

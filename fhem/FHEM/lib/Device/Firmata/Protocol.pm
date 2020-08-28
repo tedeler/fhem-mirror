@@ -994,8 +994,21 @@ sub packet_encoder_attach {
 }
 
 sub packet_pulsecounter_attach {
-  my ( $self, $pulseCntNum,  $pin ) = @_;
-  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_ATTACH}, $pulseCntNum, $pin);
+  my ( $self, $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
+  print STDERR "!!!!!! -> $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us";
+  my @data = ($pulseCntNum, $pin);
+  push @data, ($minPauseBefore_us>>14)&0x7f;
+  push @data, ($minPauseBefore_us>>7)&0x7f;
+  push @data, ($minPauseBefore_us>>0)&0x7f;
+  push @data, ($minPulseLength_us>>14)&0x7f;
+  push @data, ($minPulseLength_us>>7)&0x7f;
+  push @data, ($minPulseLength_us>>0)&0x7f;
+  push @data, ($maxPulseLength_us>>21)&0x7f;
+  push @data, ($maxPulseLength_us>>14)&0x7f;
+  push @data, ($maxPulseLength_us>>7)&0x7f;
+  push @data, ($maxPulseLength_us>>0)&0x7f;
+
+  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_ATTACH}, @data);
   return $packet;
 }
 

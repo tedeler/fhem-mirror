@@ -473,7 +473,6 @@ arduino
 =cut
 
 sub pin_mode {
-
   # --------------------------------------------------
   my ( $self, $pin, $mode ) = @_;
 
@@ -866,8 +865,9 @@ sub encoder_attach {
 }
 
 sub pulsecounter_attach {
-  my ( $self, $pulseCntNum, $pin ) = @_;
-  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_attach( $pulseCntNum, $pin ));
+  print STDERR "-> pulsecounter_attach called\n";
+  my ( $self, $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_attach( $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ));
 }
 
 
