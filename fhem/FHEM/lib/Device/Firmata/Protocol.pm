@@ -96,7 +96,9 @@ our $ENCODER_COMMANDS = {
 
 our $PULSECOUNTER_COMMANDS = {
   PULSECOUNTER_ATTACH              => 0,
-  PULSECOUNTER_REPORT_POSITIONS     => 1,
+  PULSECOUNTER_REPORT              => 1,
+  PULSECOUNTER_RESET_COUNTER       => 2,
+  PULSECOUNTER_DETACH              => 3,
 };
 
 
@@ -1011,6 +1013,23 @@ sub packet_pulsecounter_attach {
   my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_ATTACH}, @data);
   return $packet;
 }
+
+sub packet_pulsecounter_reset_counter {
+  my ( $self,$pulseCntNum ) = @_;
+  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_RESET_COUNTER}, $pulseCntNum);
+  return $packet;
+}
+sub packet_pulsecounter_detach {
+  my ( $self,$pulseCntNum ) = @_;
+  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_DETACH}, $pulseCntNum);
+  return $packet;
+}
+sub packet_pulsecounter_report {
+  my ( $self,$pulseCntNum ) = @_;
+  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_REPORT}, $pulseCntNum);
+  return $packet;
+}
+
 
 sub packet_encoder_report_position {
   my ( $self,$encoderNum ) = @_;

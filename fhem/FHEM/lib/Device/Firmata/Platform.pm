@@ -865,9 +865,23 @@ sub encoder_attach {
 }
 
 sub pulsecounter_attach {
-  print STDERR "-> pulsecounter_attach called\n";
   my ( $self, $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
   return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_attach( $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ));
+}
+
+sub pulsecounter_reset_counter {
+  my ( $self, $pulseCntNum ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_reset_counter( $pulseCntNum ));
+}
+
+sub pulsecounter_report {
+  my ( $self, $pulseCntNum ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_report( $pulseCntNum ));
+}
+
+sub pulsecounter_detach {
+  my ( $self, $encoderNum ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_detach( $encoderNum ));
 }
 
 

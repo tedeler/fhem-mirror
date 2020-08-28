@@ -22,13 +22,10 @@ use Device::Firmata::Constants  qw/ :all /;
 
 my %sets = (
   "reset" => "noArg",
-  "offset"=> "",
 );
 
 my %gets = (
-  "position" => "noArg",
-  "offset"   => "noArg",
-  "value"    => "noArg",
+  "report" => "noArg"
 );
 
 sub
@@ -36,15 +33,12 @@ FRM_PULSECNT_Initialize($)
 {
   my ($hash) = @_;
 
-
-
   $hash->{SetFn}     = "FRM_PULSECNT_Set";
   $hash->{GetFn}     = "FRM_PULSECNT_Get";
   $hash->{AttrFn}    = "FRM_PULSECNT_Attr";
   $hash->{DefFn}     = "FRM_Client_Define";
   $hash->{InitFn}    = "FRM_PULSECNT_Init";
   $hash->{UndefFn}   = "FRM_PULSECNT_Undef";
-  $hash->{StateFn}   = "FRM_PULSECNT_State";
 
   $hash->{AttrList}  = "IODev $main::readingFnAttributes";
   main::LoadModule("FRM");
@@ -64,8 +58,6 @@ FRM_PULSECNT_Init($$)
 	my $maxPulseLength_us =@$args[4];
  	my $name = $hash->{NAME};
 
-#	print STDERR "FRM_PULSECNT_Init";
-#	print STDERR Dumper($hash);
 	Log3 $hash->{NAME}, 1, "[$name] pin=$pin id=$pulseCntNum minPauseBefore_us=$minPauseBefore_us minPulseLength_us=$minPulseLength_us maxPulseLength_us=$maxPulseLength_us";
 
 
@@ -80,8 +72,6 @@ FRM_PULSECNT_Init($$)
 		my $firmata = FRM_Client_FirmataDevice($hash);
 		$firmata->pulsecounter_attach($pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us);
 		$firmata->oberve_pulsecnt($pulseCntNum, \&FRM_PULSECNT_observer, $hash);
-#		$firmata->observe_pulsecounter(\&FRM_PULSECNT_observer, $hash );
-		Log3 $name, 1, "after";
 	};
 	if ($@) {
 		$@ =~ /^(.*)( at.*FHEM.*)$/;
@@ -90,17 +80,15 @@ FRM_PULSECNT_Init($$)
 	}
 
 	if (! (defined AttrVal($name,"stateFormat",undef))) {
-		$main::attr{$name}{"stateFormat"} = "counter";
+		$main::attr{$name}{"stateFormat"} = "persistent_cnt_pulse";
 	}
 
-  $hash->{offset} = ReadingsVal($name,"counter",0);
-
 	main::readingsSingleUpdate($hash,"state","Initialized",1);
+
 	return undef;
 }
 
-sub
-FRM_PULSECNT_observer
+sub FRM_PULSECNT_observer
 {
 	my ($id, $cnt_shortPause, $cnt_shortPulse, $cnt_longPulse, $cnt_pulse, $hash) = @_;
 	my $name = $hash->{NAME};
@@ -111,21 +99,16 @@ FRM_PULSECNT_observer
 	}
 	my $persistent_cnt_pulse = ReadingsVal($name, "persistent_cnt_pulse", 0);
 
-
 	main::readingsBeginUpdate($hash);
 	main::readingsBulkUpdate($hash,"cnt_shortPause",$cnt_shortPause, 1);
 	main::readingsBulkUpdate($hash,"cnt_shortPulse",$cnt_shortPulse, 1);
 	main::readingsBulkUpdate($hash,"cnt_longPulse",$cnt_longPulse, 1);
 	main::readingsBulkUpdate($hash,"cnt_pulse",$cnt_pulse, 1);
 	main::readingsBulkUpdate($hash,"persistent_cnt_pulse",$persistent_cnt_pulse + $cnt_diff, 1);
-
-
 	main::readingsEndUpdate($hash,1);
-	print STDERR "FRM_PULSECNT_observer $cnt_pulse";
 }
 
-sub
-FRM_PULSECNT_Set
+sub FRM_PULSECNT_Set
 {
   my ($hash, @a) = @_;
   return "Need at least one parameters" if(@a < 2);
@@ -141,12 +124,8 @@ FRM_PULSECNT_Set
   COMMAND_HANDLER: {
     $command eq "reset" and do {
       eval {
-        FRM_Client_FirmataDevice($hash)->encoder_reset_position($hash->{ENCODERNUM});
+        FRM_Client_FirmataDevice($hash)->pulsecounter_reset_counter($hash->{CNTNUM});
       };
-      main::readingsBeginUpdate($hash);
-      main::readingsBulkUpdate($hash,"position",$hash->{offset},1);
-      main::readingsBulkUpdate($hash,"value",0,1);
-      main::readingsEndUpdate($hash,1);
       last;
     };
     $command eq "offset" and do {
@@ -157,8 +136,7 @@ FRM_PULSECNT_Set
   }
 }
 
-sub
-FRM_PULSECNT_Get($)
+sub FRM_PULSECNT_Get($)
 {
   my ($hash, @a) = @_;
   return "Need at least one parameters" if(@a < 2);
@@ -174,21 +152,17 @@ FRM_PULSECNT_Get($)
   my $name = shift @a;
   my $cmd = shift @a;
   ARGUMENT_HANDLER: {
-    $cmd eq "position" and do {
-      return ReadingsVal($hash->{NAME},"position","0");
-    };
-    $cmd eq "offset" and do {
-      return $hash->{offset};
-    };
-    $cmd eq "value" and do {
-      return ReadingsVal($hash->{NAME},"value","0");
+		$cmd eq "report" and do {
+			eval {
+        FRM_Client_FirmataDevice($hash)->pulsecounter_report($hash->{CNTNUM});
+      };
+      last;
     };
   }
   return undef;
 }
 
-sub
-FRM_PULSECNT_Attr($$$$) {
+sub FRM_PULSECNT_Attr($$$$) {
   my ($command,$name,$attribute,$value) = @_;
   my $hash = $main::defs{$name};
   eval {
@@ -211,39 +185,17 @@ FRM_PULSECNT_Attr($$$$) {
   }
 }
 
-sub
-FRM_PULSECNT_Undef($$)
+sub FRM_PULSECNT_Undef($$)
 {
   my ($hash, $name) = @_;
-  my $pinA = $hash->{PINA};
-  my $pinB = $hash->{PINB};
   eval {
     my $firmata = FRM_Client_FirmataDevice($hash);
-    $firmata->encoder_detach($hash->{ENCODERNUM});
-    $firmata->pin_mode($pinA,PIN_ANALOG);
-    $firmata->pin_mode($pinB,PIN_ANALOG);
+    $firmata->pulsecnt_detach($hash->{CNTNUM});
+    $firmata->pin_mode($hash->{PIN}, PIN_ANALOG);
   };
-  if ($@) {
-    eval {
-      my $firmata = FRM_Client_FirmataDevice($hash);
-      $firmata->pin_mode($pinA,PIN_INPUT);
-      $firmata->digital_write($pinA,0);
-      $firmata->pin_mode($pinB,PIN_INPUT);
-      $firmata->digital_write($pinB,0);
-    };
-  }
   return undef;
 }
 
-sub
-FRM_PULSECNT_State($$$$)
-{
-  my ($hash, $tim, $sname, $sval) = @_;
-  if ($sname eq "position") {
-    $hash->{offset} = $sval;
-  }
-  return undef;
-}
 
 1;
 
@@ -263,25 +215,31 @@ FRM_PULSECNT_State($$$$)
   Defines the FRM_PULSECNT device. &lt;pin&gt; is the device pin to use.<br>
   [id] is the instance-id of the counter. Must be a unique number per FRM-device (rages from 0-1 depending on Firmata being used.<br>
 
-	The three time values &lt;minPauseBefore_us&gt; &lt;minPulseLength_us&gt; &lt;maxPulseLength_us&gt; define a valid pulse.
+	The two time values &lt;minPulseLength_us&gt; &lt;maxPulseLength_us&gt; define a valid pulse.
 	Valid pulses are counted in reading &lt;cnt_pulse&gt;. Too long pulses are stored in &lt;cnt_longPulse&gt;. Too short pulses are stored
-	in &lt;cnt_shortPulse&gt;. If the pause between pulses is too short the pulse is not counted. The reading &lt;cnt_shortPause&gt; counts
+	in &lt;cnt_shortPulse&gt;. <br>
+	The time value &lt;minPauseBefore_us&gt; is used to count too short pause between pulses in &lt;cnt_shortPause&gt;.
 	this events.
   </ul>
 
   <br>
   <a name="FRM_PULSECNTset"></a>
   <b>Set</b><br>
+	<ul>
+	<li>reset<br>
+	resets all counter in hardware device to 0<br></li>
+  </ul><br>
   <a name="FRM_PULSECNTget"></a>
   <b>Get</b>
   <ul>
+	<li>report<br>
+	Force reporting all counter values<br></li>
   </ul><br>
   <a name="FRM_PULSECNTattr"></a>
   <b>Attributes</b><br>
   <ul>
       <li><a href="#IODev">IODev</a><br>
-      Specify which <a href="#FRM">FRM</a> to use. (Optional, only required if there is more
-      than one FRM-device defined.)
+      Specify which <a href="#FRM">FRM</a> to use. 
       </li>
     </ul>
   </ul>
