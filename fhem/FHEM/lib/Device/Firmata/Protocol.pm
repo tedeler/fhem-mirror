@@ -996,12 +996,13 @@ sub packet_encoder_attach {
 }
 
 sub packet_pulsecounter_attach {
-  my ( $self, $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
-  print STDERR "!!!!!! -> $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us";
-  my @data = ($pulseCntNum, $pin);
+  my ( $self, $pulseCntNum, $pin, $polarity, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
+  my @data = ($pulseCntNum, $pin, $polarity);
+  push @data, ($minPauseBefore_us>>21)&0x7f;
   push @data, ($minPauseBefore_us>>14)&0x7f;
   push @data, ($minPauseBefore_us>>7)&0x7f;
   push @data, ($minPauseBefore_us>>0)&0x7f;
+  push @data, ($minPulseLength_us>>21)&0x7f;
   push @data, ($minPulseLength_us>>14)&0x7f;
   push @data, ($minPulseLength_us>>7)&0x7f;
   push @data, ($minPulseLength_us>>0)&0x7f;
@@ -1029,7 +1030,6 @@ sub packet_pulsecounter_report {
   my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_REPORT}, $pulseCntNum);
   return $packet;
 }
-
 
 sub packet_encoder_report_position {
   my ( $self,$encoderNum ) = @_;

@@ -865,8 +865,8 @@ sub encoder_attach {
 }
 
 sub pulsecounter_attach {
-  my ( $self, $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
-  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_attach( $pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ));
+  my ( $self, $pulseCntNum, $pin, $polarity, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_attach( $pulseCntNum, $pin, $polarity, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ));
 }
 
 sub pulsecounter_reset_counter {

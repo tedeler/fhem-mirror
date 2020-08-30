@@ -49,19 +49,21 @@ FRM_PULSECNT_Init($$)
 {
 	my ($hash,$args) = @_;
 
-	my $u = "wrong syntax: define <name> FRM_PULSECNT pin id minPauseBefore_us minPulseLength_us maxPulseLength_us";
-  	return $u unless defined $args and int(@$args) == 5;
- 	my $pin = @$args[0];
- 	my $pulseCntNum = @$args[1];
-	my $minPauseBefore_us = @$args[2];
-	my $minPulseLength_us = @$args[3];
-	my $maxPulseLength_us =@$args[4];
+	my $u = "wrong syntax: define <name> FRM_PULSECNT pin polarity id minPauseBefore_us minPulseLength_us maxPulseLength_us";
+  	return $u unless defined $args and int(@$args) == 6;
+	my $pin = @$args[0];
+	my $polarity = @$args[1];
+ 	my $pulseCntNum = @$args[2];
+	my $minPauseBefore_us = @$args[3];
+	my $minPulseLength_us = @$args[4];
+	my $maxPulseLength_us =@$args[5];
  	my $name = $hash->{NAME};
 
 	Log3 $hash->{NAME}, 1, "[$name] pin=$pin id=$pulseCntNum minPauseBefore_us=$minPauseBefore_us minPulseLength_us=$minPulseLength_us maxPulseLength_us=$maxPulseLength_us";
 
 
 	$hash->{PIN} = $pin;
+	$hash->{polarity} = $polarity;
 	$hash->{CNTNUM} = $pulseCntNum;
 	$hash->{minPauseBefore_us} = $minPauseBefore_us;
 	$hash->{minPulseLength_us} = $minPulseLength_us;
@@ -70,7 +72,7 @@ FRM_PULSECNT_Init($$)
 	eval {
 		FRM_Client_AssignIOPort($hash);
 		my $firmata = FRM_Client_FirmataDevice($hash);
-		$firmata->pulsecounter_attach($pulseCntNum, $pin, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us);
+		$firmata->pulsecounter_attach($pulseCntNum, $pin, $polarity, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us);
 		$firmata->oberve_pulsecnt($pulseCntNum, \&FRM_PULSECNT_observer, $hash);
 	};
 	if ($@) {
@@ -176,7 +178,7 @@ sub FRM_PULSECNT_Attr($$$$) {
           last;
         };
       }
-    }
+		}
   };
   if ($@) {
     $@ =~ /^(.*)( at.*FHEM.*)$/;
@@ -239,7 +241,7 @@ sub FRM_PULSECNT_Undef($$)
   <b>Attributes</b><br>
   <ul>
       <li><a href="#IODev">IODev</a><br>
-      Specify which <a href="#FRM">FRM</a> to use. 
+      Specify which <a href="#FRM">FRM</a> to use.
       </li>
     </ul>
   </ul>

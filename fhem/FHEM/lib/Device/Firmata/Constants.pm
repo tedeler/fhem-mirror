@@ -265,7 +265,7 @@ use constant (
       RESERVED_COMMAND         => 0x00, # 2nd SysEx data byte is a chip-specific command (AVR, PIC, TI, etc).
       SERIAL_DATA              => 0x60, # serial port config/write/read/close/flush/listen request and read reply
       ENCODER_DATA             => 0x61, # receive rotary-encoders current positions
-      PULSECOUNTER_DATA        => 0x63, # receive rotary-encoders current positions
+      PULSECOUNTER_DATA        => 0x5B, # receive pulsecounter values
       ANALOG_MAPPING_QUERY     => 0x69, # ask for mapping of analog to pin numbers
       ANALOG_MAPPING_RESPONSE  => 0x6A, # reply with mapping info
       CAPABILITY_QUERY         => 0x6B, # ask for supported modes and resolution of all pins
