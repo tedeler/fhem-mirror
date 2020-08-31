@@ -31,6 +31,7 @@ use constant (
     PIN_ENCODER => 9,
     PIN_SERIAL  => 10,
     PIN_PULLUP  => 11,
+    PIN_PULSECNT=> 12,
     PIN_LOW  => 0,
     PIN_HIGH => 1,
   }
@@ -264,6 +265,7 @@ use constant (
       RESERVED_COMMAND         => 0x00, # 2nd SysEx data byte is a chip-specific command (AVR, PIC, TI, etc).
       SERIAL_DATA              => 0x60, # serial port config/write/read/close/flush/listen request and read reply
       ENCODER_DATA             => 0x61, # receive rotary-encoders current positions
+      PULSECOUNTER_DATA        => 0x5B, # receive pulsecounter values
       ANALOG_MAPPING_QUERY     => 0x69, # ask for mapping of analog to pin numbers
       ANALOG_MAPPING_RESPONSE  => 0x6A, # reply with mapping info
       CAPABILITY_QUERY         => 0x6B, # ask for supported modes and resolution of all pins
@@ -356,8 +358,9 @@ use constant (
       ONEWIRE                  => 0x07, # pin configured for 1-Wire commuication
       STEPPER                  => 0x08, # pin configured for stepper motor
       ENCODER                  => 0x09, # pin configured for rotary-encoders
-      SERIAL                   => 0x0A, # pin configured for serial port      
+      SERIAL                   => 0x0A, # pin configured for serial port
       PULLUP                   => 0x0B, # digital pin in digitalInput mode with pullup
+      PULSECNT                 => 0x0C, # digital pin in pulsecounter mode
 
       # Deprecated entries
       deprecated => [

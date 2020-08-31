@@ -45,6 +45,7 @@ use Device::Firmata::Base
   onewire_observer            => [],
   stepper_observer            => [],
   encoder_observer            => [],
+  pulsecnt_observer            => [],
   serial_observer             => [],
   scheduler_observer          => undef,
   string_observer             => undef,
@@ -95,6 +96,7 @@ sub detach {
   $self->{onewire_observer}   = [];
   $self->{stepper_observer}   = [];
   $self->{encoder_observer}   = [];
+  $self->{pulsecnt_observer}  = [];
   $self->{serial_observer}    = [];
   $self->{scheduler_observer} = undef;
   $self->{tasks}              = [];
@@ -255,6 +257,7 @@ sub sysex_handle {
       my @onewirepins;
       my @stepperpins;
       my @encoderpins;
+      my @pulsecntpins;
       my @serialpins;
       my @pulluppins;
       
@@ -295,6 +298,9 @@ sub sysex_handle {
           	push @encoderpins, $pin;
             $self->{metadata}{encoder_resolutions}{$pin} = $capabilities->{$pin}->{PIN_ENCODER+0}->{resolution};
           }
+          if ($capabilities->{$pin}->{PIN_PULSECNT+0}) {
+          	push @pulsecntpins, $pin;
+          }
           if ($capabilities->{$pin}->{PIN_SERIAL+0}) {
             push @serialpins, $pin;
             $self->{metadata}{serial_resolutions}{$pin} = $capabilities->{$pin}->{PIN_SERIAL+0}->{resolution};
@@ -314,6 +320,7 @@ sub sysex_handle {
       $self->{metadata}{onewire_pins} = \@onewirepins;
       $self->{metadata}{stepper_pins} = \@stepperpins;
       $self->{metadata}{encoder_pins} = \@encoderpins;
+      $self->{metadata}{pulsecnt_pins} = \@pulsecntpins;
       $self->{metadata}{serial_pins}  = \@serialpins;
       $self->{metadata}{pullup_pins}  = \@pulluppins;
       last;
@@ -394,6 +401,20 @@ sub sysex_handle {
       my $observer = $self->{serial_observer}[$serialPort];
       if (defined $observer) {
         $observer->{method}( $data, $observer->{context} );
+      }
+      last;
+    };
+
+    $sysex_message->{command_str} eq 'PULSECOUNTER_DATA' and do {
+      my $id = $data->{pulseCntNum};
+      my $cnt_shortPause = $data->{cnt_shortPause};
+      my $cnt_shortPulse = $data->{cnt_shortPulse};
+      my $cnt_longPulse = $data->{cnt_longPulse};
+      my $cnt_pulse = $data->{cnt_pulse};
+
+      my $observer = $self->{pulsecnt_observer}[$id];
+      if (defined $observer) {
+        $observer->{method}( $id, $cnt_shortPause, $cnt_shortPulse, $cnt_longPulse, $cnt_pulse, $observer->{context} );
       }
       last;
     };
@@ -844,6 +865,27 @@ sub encoder_attach {
   return $self->{io}->data_write($self->{protocol}->packet_encoder_attach( $encoderNum, $pinA, $pinB ));
 }
 
+sub pulsecounter_attach {
+  my ( $self, $pulseCntNum, $pin, $polarity, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_attach( $pulseCntNum, $pin, $polarity, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ));
+}
+
+sub pulsecounter_reset_counter {
+  my ( $self, $pulseCntNum ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_reset_counter( $pulseCntNum ));
+}
+
+sub pulsecounter_report {
+  my ( $self, $pulseCntNum ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_report( $pulseCntNum ));
+}
+
+sub pulsecounter_detach {
+  my ( $self, $encoderNum ) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_pulsecounter_detach( $encoderNum ));
+}
+
+
 sub encoder_report_position {
   my ( $self, $encoderNum ) = @_;
   return $self->{io}->data_write($self->{protocol}->packet_encoder_report_position( $encoderNum ));
@@ -966,6 +1008,19 @@ sub observe_stepper {
   my ( $self, $stepperNum, $observer, $context ) = @_;
 #TODO validation?  die "unsupported mode 'STEPPER' for pin '".$pin."'" unless ($self->is_supported_mode($pin,PIN_STEPPER));
   $self->{stepper_observer}[$stepperNum] = {
+      method  => $observer,
+      context => $context,
+    };
+  return 1;
+}
+
+sub oberve_pulsecnt {
+  my ( $self, $pulseCntNum, $observer, $context ) = @_;
+  my $pin = $context->{PIN};
+
+  die "unsupported mode 'PULSECNT' for pin '".$pin."'" unless ($self->is_supported_mode($pin,PIN_PULSECNT));
+
+  $self->{pulsecnt_observer}[$pulseCntNum] = {
       method  => $observer,
       context => $context,
     };

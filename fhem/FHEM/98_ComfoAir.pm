@@ -884,8 +884,8 @@ ComfoAir_HandleSendQueue($)
                 " frame: " . $hash->{LASTREQUEST} . 
                 ($entry->{EXPECT} ? " and wait for " . $entry->{EXPECT} : "") .
                 ", V " . $hash->{ModuleVersion};
-        
-            DevIo_SimpleWrite($hash, $bstring, 0);
+
+            eval{DevIo_SimpleWrite($hash, $bstring, 0)};
       
             if ($entry->{EXPECT}) {
                 # we expect a reply

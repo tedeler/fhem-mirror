@@ -94,6 +94,14 @@ our $ENCODER_COMMANDS = {
   ENCODER_DETACH              => 5,
 };
 
+our $PULSECOUNTER_COMMANDS = {
+  PULSECOUNTER_ATTACH              => 0,
+  PULSECOUNTER_REPORT              => 1,
+  PULSECOUNTER_RESET_COUNTER       => 2,
+  PULSECOUNTER_DETACH              => 3,
+};
+
+
 our $SERIAL_COMMANDS = {
   SERIAL_CONFIG            => 0x10, # config serial port stetting such as baud rate and pins
   SERIAL_WRITE             => 0x20, # write to serial port
@@ -115,6 +123,7 @@ our $MODENAMES = {
   9                           => 'ENCODER',
  10                           => 'SERIAL',
  11                           => 'PULLUP',
+ 12                           => 'PULSECNT',
 };
 
 =head1 DESCRIPTION
@@ -330,6 +339,11 @@ sub sysex_parse {
 
         $command == $protocol_commands->{ENCODER_DATA} and do {
           $return_data = $self->handle_encoder_response($sysex_data);
+          last;
+        };
+
+        $command == $protocol_commands->{PULSECOUNTER_DATA} and do {
+          $return_data = $self->handle_pulsecnt_response($sysex_data);
           last;
         };
 
@@ -981,6 +995,42 @@ sub packet_encoder_attach {
   return $packet;
 }
 
+sub packet_pulsecounter_attach {
+  my ( $self, $pulseCntNum, $pin, $polarity, $minPauseBefore_us, $minPulseLength_us, $maxPulseLength_us ) = @_;
+  my @data = ($pulseCntNum, $pin, $polarity);
+  push @data, ($minPauseBefore_us>>21)&0x7f;
+  push @data, ($minPauseBefore_us>>14)&0x7f;
+  push @data, ($minPauseBefore_us>>7)&0x7f;
+  push @data, ($minPauseBefore_us>>0)&0x7f;
+  push @data, ($minPulseLength_us>>21)&0x7f;
+  push @data, ($minPulseLength_us>>14)&0x7f;
+  push @data, ($minPulseLength_us>>7)&0x7f;
+  push @data, ($minPulseLength_us>>0)&0x7f;
+  push @data, ($maxPulseLength_us>>21)&0x7f;
+  push @data, ($maxPulseLength_us>>14)&0x7f;
+  push @data, ($maxPulseLength_us>>7)&0x7f;
+  push @data, ($maxPulseLength_us>>0)&0x7f;
+
+  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_ATTACH}, @data);
+  return $packet;
+}
+
+sub packet_pulsecounter_reset_counter {
+  my ( $self,$pulseCntNum ) = @_;
+  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_RESET_COUNTER}, $pulseCntNum);
+  return $packet;
+}
+sub packet_pulsecounter_detach {
+  my ( $self,$pulseCntNum ) = @_;
+  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_DETACH}, $pulseCntNum);
+  return $packet;
+}
+sub packet_pulsecounter_report {
+  my ( $self,$pulseCntNum ) = @_;
+  my $packet = $self->packet_sysex_command('PULSECOUNTER_DATA', $PULSECOUNTER_COMMANDS->{PULSECOUNTER_REPORT}, $pulseCntNum);
+  return $packet;
+}
+
 sub packet_encoder_report_position {
   my ( $self,$encoderNum ) = @_;
   my $packet = $self->packet_sysex_command('ENCODER_DATA', $ENCODER_COMMANDS->{ENCODER_REPORT_POSITION}, $encoderNum);
@@ -1009,6 +1059,24 @@ sub packet_encoder_detach {
   my ( $self,$encoderNum ) = @_;
   my $packet = $self->packet_sysex_command('ENCODER_DATA', $ENCODER_COMMANDS->{ENCODER_DETACH}, $encoderNum);
   return $packet;
+}
+
+sub handle_pulsecnt_response {
+  	my ( $self, $sysex_data ) = @_;
+    my $id = shift @$sysex_data;
+    my $cnt_shortPause = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+    my $cnt_shortPulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+    my $cnt_longPulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+    my $cnt_pulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+
+    return {
+      pulseCntNum => $id,
+      cnt_shortPause => $cnt_shortPause,
+      cnt_shortPulse => $cnt_shortPulse,
+      cnt_longPulse => $cnt_longPulse,
+      cnt_pulse => $cnt_pulse
+    };
+
 }
 
 sub handle_encoder_response {

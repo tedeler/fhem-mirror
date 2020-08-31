@@ -76,6 +76,7 @@ my @clients = qw(
   FRM_RGB
   FRM_ROTENC
   FRM_STEPPER
+	FRM_PULSECNT
   OWX
   OWX_ASYNC
   I2C_LCD
@@ -758,6 +759,8 @@ sub FRM_SetupDevice($) {
       $main::defs{$name}{stepper_pins} = join(",", sort{$a<=>$b}(@$stepperpins)) if (defined $stepperpins and scalar @$stepperpins);
       my $encoderpins = $device->{metadata}{encoder_pins};
       $main::defs{$name}{encoder_pins} = join(",", sort{$a<=>$b}(@$encoderpins)) if (defined $encoderpins and scalar @$encoderpins);
+			my $pulsecntpins = $device->{metadata}{pulsecnt_pins};
+      $main::defs{$name}{pulsecnt_pins} = join(",", sort{$a<=>$b}(@$pulsecntpins)) if (defined $pulsecntpins and scalar $pulsecntpins);
       my $serialpins = $device->{metadata}{serial_pins};
       $main::defs{$name}{serial_pins} = join(",", sort{$a<=>$b}(@$serialpins)) if (defined $serialpins and scalar @$serialpins);
       my $pulluppins = $device->{metadata}{pullup_pins};
