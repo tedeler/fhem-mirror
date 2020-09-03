@@ -260,7 +260,7 @@ sub sysex_handle {
       my @pulsecntpins;
       my @serialpins;
       my @pulluppins;
-      
+
       foreach my $pin (keys %$capabilities) {
         if (defined $capabilities->{$pin}) {
           if ($capabilities->{$pin}->{PIN_INPUT+0}) {
@@ -395,7 +395,7 @@ sub sysex_handle {
       };
       last;
     };
-    
+
     $sysex_message->{command_str} eq 'SERIAL_DATA' and do {
       my $serialPort = $data->{port};
       my $observer = $self->{serial_observer}[$serialPort];
@@ -411,10 +411,12 @@ sub sysex_handle {
       my $cnt_shortPulse = $data->{cnt_shortPulse};
       my $cnt_longPulse = $data->{cnt_longPulse};
       my $cnt_pulse = $data->{cnt_pulse};
+      my $pulseLength = $data->{pulseLength};
+      my $pauseLength = $data->{pauseLength};
 
       my $observer = $self->{pulsecnt_observer}[$id];
       if (defined $observer) {
-        $observer->{method}( $id, $cnt_shortPause, $cnt_shortPulse, $cnt_longPulse, $cnt_pulse, $observer->{context} );
+        $observer->{method}( $id, $cnt_shortPause, $cnt_shortPulse, $cnt_longPulse, $cnt_pulse, $pulseLength, $pauseLength, $observer->{context} );
       }
       last;
     };
@@ -506,7 +508,7 @@ Analogous to the digitalWrite function on the
 arduino
 
 Deprecation Warning:
-Writing to pin with mode "INPUT" is only supported for backward compatibility 
+Writing to pin with mode "INPUT" is only supported for backward compatibility
 to switch pullup on and off. Use sub pin_mode with $mode=PIN_PULLUP instead.
 
 =cut
@@ -1070,7 +1072,7 @@ sub is_supported_mode {
   return undef if (defined $self->{metadata}->{capabilities} and (!(defined $self->{metadata}->{capabilities}->{$pin}) or !(defined $self->{metadata}->{capabilities}->{$pin}->{$mode})));
   return 1;
 }
- 
+
 sub is_configured_mode {
   my ($self,$pin,$mode) = @_;
   return undef if (!defined $self->{pin_modes}->{$pin} or $self->{pin_modes}->{$pin} != $mode);

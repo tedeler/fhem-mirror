@@ -407,7 +407,7 @@ sub packet_sysex {
 
   my $protocol_version  = $self->{protocol_version};
   my $protocol_commands = $COMMANDS->{$protocol_version};
-  
+
   my $bytes = @sysex_data + 2;
   my $packet = pack "C" x $bytes, $protocol_commands->{START_SYSEX},
     @sysex_data,
@@ -939,14 +939,14 @@ sub handle_scheduler_response {
 
 sub packet_stepper_config {
   my ( $self, $stepperNum, $interface, $stepsPerRev, $directionPin, $stepPin, $motorPin3, $motorPin4 ) = @_;
-  
+
   die "invalid stepper interface ".$interface unless defined ($STEPPER_INTERFACES->{$interface});
   my @configdata = ($stepperNum,$STEPPER_INTERFACES->{$interface});
-  
+
   push_value_as_two_7bit($stepsPerRev, \@configdata);
   push @configdata, $directionPin;
   push @configdata, $stepPin;
-  
+
   if ($interface eq 'FOUR_WIRE') {
     push @configdata, $motorPin3;
     push @configdata, $motorPin4;
@@ -1068,35 +1068,39 @@ sub handle_pulsecnt_response {
     my $cnt_shortPulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
     my $cnt_longPulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
     my $cnt_pulse = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+    my $pulseLength = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
+    my $pauseLength = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
 
     return {
       pulseCntNum => $id,
       cnt_shortPause => $cnt_shortPause,
       cnt_shortPulse => $cnt_shortPulse,
       cnt_longPulse => $cnt_longPulse,
-      cnt_pulse => $cnt_pulse
+      cnt_pulse => $cnt_pulse,
+      pulseLength => $pulseLength,
+      pauseLength => $pauseLength
     };
 
 }
 
 sub handle_encoder_response {
   my ( $self, $sysex_data ) = @_;
-  
+
   my @retval = ();
-  
+
   while (@$sysex_data) {
-    
+
     my $command = shift @$sysex_data;
     my $direction = ($command & 0x40) >> 6;
     my $encoderNum = $command & 0x3f;
     my $value = shift14bit($sysex_data) + (shift14bit($sysex_data) << 14);
-    
+
     push @retval,{
       encoderNum => $encoderNum,
       value => $direction ? -1 * $value : $value,
     };
   };
-  
+
   return \@retval;
 }
 
@@ -1124,7 +1128,7 @@ sub packet_serial_config {
       $rxPin & 0x7f,
       $txPin & 0x7f
     );
-  } else {  
+  } else {
     return $self->packet_sysex_command( SERIAL_DATA,
       $SERIAL_COMMANDS->{SERIAL_CONFIG} | $port,
       $baud & 0x7f,
@@ -1164,7 +1168,7 @@ sub packet_serial_listen {
 
 sub packet_serial_write {
   my ( $self, $port, @serialdata ) = @_;
-  
+
   if (scalar @serialdata) {
     my @data;
     push_array_as_two_7bit(\@serialdata,\@data);
@@ -1192,8 +1196,8 @@ sub packet_serial_write {
 
 sub packet_serial_read {
   my ( $self, $port, $command, $maxBytes ) = @_;
-  
-  if ($maxBytes > 0) { 
+
+  if ($maxBytes > 0) {
     return $self->packet_sysex_command( SERIAL_DATA,
       $SERIAL_COMMANDS->{SERIAL_READ} | $port,
       $command,
@@ -1223,7 +1227,7 @@ sub packet_serial_read {
 
 sub handle_serial_reply {
   my ( $self, $sysex_data ) = @_;
-  
+
   my $command = shift @$sysex_data;
   my $port = $command & 0xF;
   my @data = double_7bit_to_array($sysex_data);
@@ -1363,14 +1367,14 @@ sub get_max_supported_protocol_version {
   my ( $self, $deviceProtcolVersion ) = @_;
   return "V_2_01" unless (defined($deviceProtcolVersion));                       # min. supported protocol version if undefined
   return $deviceProtcolVersion if (defined($COMMANDS->{$deviceProtcolVersion})); # requested version if known
-  
+
   my $maxSupportedProtocolVersion = undef;
   foreach my $protocolVersion (sort keys %{$COMMANDS}) {
     if ($protocolVersion lt $deviceProtcolVersion) {
       $maxSupportedProtocolVersion = $protocolVersion;                           # nearest lower version if not known
     }
   }
-  
+
   return $maxSupportedProtocolVersion;
 }
 
