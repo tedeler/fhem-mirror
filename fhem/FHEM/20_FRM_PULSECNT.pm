@@ -22,6 +22,7 @@ use Device::Firmata::Constants  qw/ :all /;
 
 my %sets = (
   "reset" => "noArg",
+	"calibrateCounter" => ""
 );
 
 my %gets = (
@@ -133,9 +134,9 @@ sub FRM_PULSECNT_Set
       };
       last;
     };
-    $command eq "offset" and do {
-      $hash->{offset} = $value;
-      readingsSingleUpdate($hash,"position",ReadingsVal($hash->{NAME},"value",0)+$value,1);
+    $command eq "calibrateCounter" and do {
+			my $offset = $value - ReadingsVal($hash->{NAME}, "persistent_cnt_pulse", 0);
+			readingsSingleUpdate($hash,"persistent_cnt_pulse_offset", $offset,1);
       last;
     };
   }
