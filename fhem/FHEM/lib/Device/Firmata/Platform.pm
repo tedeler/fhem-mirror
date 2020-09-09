@@ -932,8 +932,8 @@ sub serial_stopreading {
 }
 
 sub serial_config {
-  my ( $self, $port, $baud, $rxPin, $txPin ) = @_;
-  return $self->{io}->data_write($self->{protocol}->packet_serial_config( $port, $baud, $rxPin, $txPin ));
+  my ( $self, $port, $baud, $rxPin, $txPin, $serialmode) = @_;
+  return $self->{io}->data_write($self->{protocol}->packet_serial_config( $port, $baud, $rxPin, $txPin, $serialmode ));
 }
 
 =head2 poll

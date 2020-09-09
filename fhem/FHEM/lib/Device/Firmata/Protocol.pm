@@ -1118,7 +1118,7 @@ sub handle_encoder_response {
 # */
 
 sub packet_serial_config {
-  my ( $self, $port, $baud, $rxPin, $txPin ) = @_;
+  my ( $self, $port, $baud, $rxPin, $txPin, $serialmode ) = @_;
   if (defined($rxPin) && defined($txPin)) {
     return $self->packet_sysex_command( SERIAL_DATA,
       $SERIAL_COMMANDS->{SERIAL_CONFIG} | $port,
@@ -1128,6 +1128,18 @@ sub packet_serial_config {
       $rxPin & 0x7f,
       $txPin & 0x7f
     );
+  } elsif (defined($serialmode)) {
+      return $self->packet_sysex_command( SERIAL_DATA,
+        $SERIAL_COMMANDS->{SERIAL_CONFIG} | $port,
+        $baud & 0x7f,
+        ($baud >> 7) & 0x7f,
+        ($baud >> 14) & 0x7f,
+        0,
+        0,
+        $serialmode & 0x7f,
+        ($serialmode >> 7) & 0x7f,
+        ($serialmode >> 14) & 0x7f,
+      );
   } else {
     return $self->packet_sysex_command( SERIAL_DATA,
       $SERIAL_COMMANDS->{SERIAL_CONFIG} | $port,

@@ -11,6 +11,7 @@ use Exporter;
 use vars qw/
   @ISA @EXPORT_OK %EXPORT_TAGS
   $BASE
+  $SERIALMODES
   $COMMANDS $COMMAND_NAMES
   $COMMAND_LOOKUP
   /;
@@ -36,6 +37,26 @@ use constant (
     PIN_HIGH => 1,
   }
 );
+
+use constant (
+  $SERIALMODES = {
+    SERIALMODE_PARITY_EVEN    => 0x1,
+    SERIALMODE_PARITY_ODD     => 0x2,
+    SERIALMODE_PARITY_NONE    => 0x3,
+    SERIALMODE_PARITY_MASK    => 0xF,
+
+    SERIALMODE_STOP_BIT_1     => 0x10,
+    SERIALMODE_STOP_BIT_1_5   => 0x20,
+    SERIALMODE_STOP_BIT_2     => 0x30,
+    SERIALMODE_STOP_BIT_MASK  => 0xF0,
+
+    SERIALMODE_DATA_5         => 0x100,
+    SERIALMODE_DATA_6         => 0x200,
+    SERIALMODE_DATA_7         => 0x300,
+    SERIALMODE_DATA_8         => 0x400,
+    SERIALMODE_DATA_MASK      => 0xF00,
+  }
+  );
 
 # We need to apply all the available protocols
 use constant (
@@ -140,7 +161,7 @@ use constant (
 
     },    # /Constants for Version 2.2
 
-    V_2_03 => { 
+    V_2_03 => {
 
       MAX_DATA_BYTES           =>  32, # max number of data bytes in non-Sysex messages
 
@@ -367,7 +388,7 @@ use constant (
         qw( FIRMATA_STRING SYSEX_I2C_REQUEST SYSEX_I2C_REPLY SYSEX_SAMPLING_INTERVAL )
       ],
 
-    },    # /Constants for Version 2.6    
+    },    # /Constants for Version 2.6
   }
 );
 
@@ -391,9 +412,9 @@ use constant { COMMAND_NAMES => [ $COMMAND_NAMES = [ keys %$COMMAND_NAMES ] ] };
 @EXPORT_OK = (
     @$COMMAND_NAMES, keys %$BASE,
     keys %$COMMANDS,
-    qw( $COMMANDS $COMMAND_NAMES $COMMAND_LOOKUP ),
+    qw( $COMMANDS $COMMAND_NAMES $COMMAND_LOOKUP $SERIALMODES),
   );
 
 %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
-1;     
+1;
