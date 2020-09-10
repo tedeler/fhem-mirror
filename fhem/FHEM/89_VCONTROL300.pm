@@ -268,7 +268,8 @@ sub VCONTROL300_Define($$)
 
 	#Determine if USB device or TCP Connection is used
 	#if (index($dev, ':') >= 0) {	#Does not work for /dev/<USB Device with ":" in name>
-	if (index($dev, '/') == -1) {
+	print STDERR "XXX $dev\n";
+	if (index($dev, '/') == -1 && index($dev, 'FHEM:DEVIO') == -1) {
     #####################################
 		###TCP Connection
     #####################################
